@@ -87,9 +87,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Custom implementation of PeerConnection.Observer
-    // Custom implementation of PeerConnection.Observer
-    // Custom implementation of PeerConnection.Observer
-    // Custom implementation of PeerConnection.Observer
     private static class CustomPeerConnectionObserver implements PeerConnection.Observer {
         private final String TAG;
 
