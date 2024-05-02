@@ -91,7 +91,9 @@ public class ChordNode {
         }
     }
 
-    /*public void join(String existingNodeIP, int existingNodePort) {
+    // TCP CONNECTION IN DEVELOPMENT
+
+    /*public void tcpJoin(String existingNodeIP, int existingNodePort) {
         try (Socket socket = new Socket(existingNodeIP, existingNodePort);
              ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
@@ -115,6 +117,8 @@ public class ChordNode {
             e.printStackTrace();
         }
     }*/
+
+    // END OF TCP CONNECTION IN DEVELOPMENT
 
     private void updateFingerTable() {
         // Implement logic to update the finger table based on the successor node
