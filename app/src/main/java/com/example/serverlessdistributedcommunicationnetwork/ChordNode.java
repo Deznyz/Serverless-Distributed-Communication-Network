@@ -12,21 +12,30 @@ import java.net.*;
 import java.util.*;
 
 
+
 public class ChordNode {
     private static final int M = 4; // Size of the identifier space (2^M)
     private static final int ID_SPACE = (int) Math.pow(2, M); // Total space of node IDs
     private static final int DISCOVERY_PORT = 5555; // Port for multicast discovery
 
-    private int nodeId; // Using int for dynamic node IDs
+    private int nodeId;
     private ChordNode successor;
     private ChordNode predecessor;
     private Map<Integer, ChordNode> fingerTable;
+    private Map<String, String> ipAddresses = new HashMap<>();
 
-    public ChordNode() {
+
+    // For updating the display with ip-addresses
+    private List<NodeJoinListener> joinListeners = new ArrayList<>();
+
+
+    public ChordNode(NodeJoinListener listener) {
         this.nodeId = generateNodeId(); // Assign unique node ID
         this.fingerTable = new HashMap<>();
         initializeFingerTable();
-        startDiscoveryListener();
+        startDiscoveryListener(listener);
+        ipAddresses = new HashMap<>();
+        joinListeners = new ArrayList<>();
     }
 
     private int generateNodeId() {
@@ -42,7 +51,7 @@ public class ChordNode {
         }
     }
 
-    private void startDiscoveryListener() {
+    private void startDiscoveryListener(NodeJoinListener listener) {
         new Thread(() -> {
             try (MulticastSocket socket = new MulticastSocket(DISCOVERY_PORT)) {
                 InetAddress group = InetAddress.getByName("224.0.0.1");
@@ -57,7 +66,12 @@ public class ChordNode {
                     if (message.equals("DISCOVER")) {
                         // Respond to discovery request
                         sendDiscoveryResponse(packet.getAddress(), packet.getPort());
-                        System.out.println("Received discovery request from " + packet.getAddress());
+                        System.out.println("Received discovery request from " + packet.getAddress() + ". From port " + packet.getPort());
+
+                        ipAddresses.put(packet.getAddress().getHostAddress(), "test");
+                        System.out.println(ipAddresses);
+                        listener.onNodeJoin();
+
                     }
                 }
             } catch (IOException e) {
@@ -78,7 +92,9 @@ public class ChordNode {
         }
     }
 
-    public void join() {
+
+    // UDP join method (not functionality) needs to be revised
+    public void join(NodeJoinListener listener) {
         // Broadcast discovery message
         try (DatagramSocket socket = new DatagramSocket()) {
             InetAddress group = InetAddress.getByName("224.0.0.1");
@@ -86,6 +102,11 @@ public class ChordNode {
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, DISCOVERY_PORT);
             socket.send(packet);
+
+
+
+            // Notify listener about join attempt
+            listener.onNodeJoin();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -93,7 +114,7 @@ public class ChordNode {
 
     // TCP CONNECTION IN DEVELOPMENT
 
-    /*public void tcpJoin(String existingNodeIP, int existingNodePort) {
+    public void tcpJoin(String existingNodeIP, int existingNodePort) {
         try (Socket socket = new Socket(existingNodeIP, existingNodePort);
              ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
@@ -103,6 +124,7 @@ public class ChordNode {
 
             // Receive response
             Object response = inputStream.readObject();
+
             if (response instanceof JoinResponse) {
                 JoinResponse joinResponse = (JoinResponse) response;
                 this.successor = joinResponse.getSuccessor();
@@ -116,7 +138,7 @@ public class ChordNode {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     // END OF TCP CONNECTION IN DEVELOPMENT
 
@@ -163,4 +185,20 @@ public class ChordNode {
     public void setPredecessor(ChordNode predecessor) {
         this.predecessor = predecessor;
     }
+
+    public Map<String, String> getIpAddresses() {
+        return ipAddresses;
+    }
+
+    public void addJoinListener(NodeJoinListener listener) {
+        joinListeners.add(listener);
+    }
+
+    private void notifyNodeJoinListeners() {
+        for (NodeJoinListener listener : joinListeners) {
+            listener.onNodeJoin();
+        }
+    }
+
 }
+
