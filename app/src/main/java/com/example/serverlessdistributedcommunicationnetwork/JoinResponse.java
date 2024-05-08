@@ -1,7 +1,8 @@
 package com.example.serverlessdistributedcommunicationnetwork;
 import java.io.Serializable;
 
-// JoinResponse class for sending join responses
+//---USED FOR THE TCPJOIN METHOD NOT RELEVANT FOR MEETING 10/5---
+//---IN DEVELOPMENT---
 public class JoinResponse implements Serializable {
     private static final long serialVersionUID = 1L;
     private ChordNode successor;

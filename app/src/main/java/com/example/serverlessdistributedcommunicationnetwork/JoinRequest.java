@@ -2,7 +2,8 @@ package com.example.serverlessdistributedcommunicationnetwork;
 
 import java.io.Serializable;
 
-// JoinRequest class for sending join requests
+//---USED FOR THE TCPJOIN METHOD NOT RELEVANT FOR MEETING 10/5---
+//---IN DEVELOPMENT---
 public class JoinRequest implements Serializable {
     private static final long serialVersionUID = 1L;
     private int nodeId;
