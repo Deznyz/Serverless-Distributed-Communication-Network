@@ -14,32 +14,35 @@ import java.util.*;
 
 
 public class ChordNode {
-    private static final int M = 4; // Size of the identifier space (2^M)
-    private static final int ID_SPACE = (int) Math.pow(2, M); // Total space of node IDs
-    private static final int DISCOVERY_PORT = 5555; // Port for multicast discovery
+    private static final int M = 24;
+    //total space of node IDs - using M=24 makes id_space = 16777216
+    //done this way for easy scalability
+    private static final int ID_SPACE = (int) Math.pow(2, M);
+    private static final int DISCOVERY_PORT = 5555; //port for (UDP broadcast discovery
 
     private int nodeId;
-    private ChordNode successor;
-    private ChordNode predecessor;
-    private Map<Integer, ChordNode> fingerTable;
-    private Map<String, String> ipAddresses = new HashMap<>();
+    private ChordNode successor;//as of right now not in functional use
+    private ChordNode predecessor;//as of right now not in functional use
+    private Map<Integer, ChordNode> fingerTable;//as of right now not in functional use
+    private Map<String, String> ipAddresses;
 
 
     // For updating the display with ip-addresses
     private List<NodeJoinListener> joinListeners = new ArrayList<>();
 
 
+    //node object
     public ChordNode(NodeJoinListener listener) {
-        this.nodeId = generateNodeId(); // Assign unique node ID
-        this.fingerTable = new HashMap<>();
-        initializeFingerTable();
+        this.nodeId = generateNodeId();
+        this.fingerTable = new HashMap<>();//as of right now not in functional use
+        initializeFingerTable();//as of right now not in functional use
         startDiscoveryListener(listener);
         ipAddresses = new HashMap<>();
         joinListeners = new ArrayList<>();
     }
 
+    //generates a random node id between 0 and ID_SPACE - 1
     private int generateNodeId() {
-        // Generate a random integer between 0 and ID_SPACE - 1 as the node ID
         Random random = new Random();
         return random.nextInt(ID_SPACE);
     }
@@ -51,6 +54,7 @@ public class ChordNode {
         }
     }
 
+    //new thread with a listener on 224.0.0.1
     private void startDiscoveryListener(NodeJoinListener listener) {
         new Thread(() -> {
             try (MulticastSocket socket = new MulticastSocket(DISCOVERY_PORT)) {
@@ -63,13 +67,22 @@ public class ChordNode {
                     socket.receive(packet);
 
                     String message = new String(packet.getData(), packet.getOffset(), packet.getLength());
+
+
+                    //triggers when another node uses the "join" function
                     if (message.equals("DISCOVER")) {
-                        // Respond to discovery request
                         sendDiscoveryResponse(packet.getAddress(), packet.getPort());
+
+                        //gets both port and ip-address from the other node
                         System.out.println("Received discovery request from " + packet.getAddress() + ". From port " + packet.getPort());
 
+                        //stores the ip-address (so far) in a key-value map
                         ipAddresses.put(packet.getAddress().getHostAddress(), "test");
+
+                        //prints the map for debuggings sake
                         System.out.println(ipAddresses);
+
+                        //triggers event
                         listener.onNodeJoin();
 
                     }
@@ -80,12 +93,14 @@ public class ChordNode {
         }).start();
     }
 
+    //sends a message to the other node, when a discoverymessage was recievced
     private void sendDiscoveryResponse(InetAddress address, int port) {
         try (DatagramSocket socket = new DatagramSocket()) {
             String response = nodeId + "," + InetAddress.getLocalHost().getHostAddress();
             byte[] buffer = response.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
             socket.send(packet);
+            //includes the ip-address of current node
             System.out.println("Sent discovery response to " + address);
         } catch (IOException e) {
             e.printStackTrace();
@@ -93,10 +108,11 @@ public class ChordNode {
     }
 
 
-    // UDP join method (not functionality) needs to be revised
+    //UDP join method - sends a discovery message on the chosen ip address
     public void join(NodeJoinListener listener) {
-        // Broadcast discovery message
+        //broadcasts a discovery message
         try (DatagramSocket socket = new DatagramSocket()) {
+            //224.0.0.1 reserved for all hosts on the network
             InetAddress group = InetAddress.getByName("224.0.0.1");
             String message = "DISCOVER";
             byte[] buffer = message.getBytes();
@@ -105,24 +121,23 @@ public class ChordNode {
 
 
 
-            // Notify listener about join attempt
+            //EVENT: notifies the listener about join for the UI update (as is right now)
+            //NOTE TO SELF: might not need to be here after added to "startDiscoveryListener" - look into it
             listener.onNodeJoin();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // TCP CONNECTION IN DEVELOPMENT
-
+    //---TCP CONNECTION IN DEVELOPMENT---
+    //not relevant for the meeting 10/5
     public void tcpJoin(String existingNodeIP, int existingNodePort) {
         try (Socket socket = new Socket(existingNodeIP, existingNodePort);
              ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
 
-            // Send join request
             outputStream.writeObject(new JoinRequest(nodeId));
 
-            // Receive response
             Object response = inputStream.readObject();
 
             if (response instanceof JoinResponse) {
@@ -130,20 +145,21 @@ public class ChordNode {
                 this.successor = joinResponse.getSuccessor();
                 this.predecessor = this.successor.getPredecessor();
                 this.successor.setPredecessor(this);
+                //FYI: update needs logic
                 updateFingerTable();
             } else {
-                // Handle unexpected response
-                System.err.println("Unexpected response received during join");
+                System.err.println("error response during join");
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    // END OF TCP CONNECTION IN DEVELOPMENT
+    //---END OF TCP CONNECTION IN DEVELOPMENT---
 
+    //---HELPER FUNCTIONS: as of this moment these functions does not do anything iin the current implementation---
     private void updateFingerTable() {
-        // Implement logic to update the finger table based on the successor node
+        //---LOGIC TO BE IMNPLEMENTED---
     }
 
     private boolean isInInterval(int id, int start, int end, boolean inclusive) {
@@ -153,6 +169,7 @@ public class ChordNode {
             return (start < id && id < end) || (start > end && (start < id || id < end));
         }
     }
+
 
     public ChordNode findSuccessor(int id) {
         if (id == nodeId) {
@@ -177,6 +194,7 @@ public class ChordNode {
         }
         return this;
     }
+    //---END OF HELPERFUNCTIONS---
 
     public ChordNode getPredecessor() {
         return predecessor;
@@ -190,15 +208,19 @@ public class ChordNode {
         return ipAddresses;
     }
 
+    //implementation of the
     public void addJoinListener(NodeJoinListener listener) {
         joinListeners.add(listener);
     }
 
-    private void notifyNodeJoinListeners() {
-        for (NodeJoinListener listener : joinListeners) {
-            listener.onNodeJoin();
-        }
-    }
+
+    //--Leftover code for a precious attempt, left in as im unsure if needed later---
+//    private void notifyNodeJoinListeners() {
+//        for (NodeJoinListener listener : joinListeners) {
+//            listener.onNodeJoin();
+//        }
+//    }
+    //---END OF LEFTOVERCODE---
 
 }
 

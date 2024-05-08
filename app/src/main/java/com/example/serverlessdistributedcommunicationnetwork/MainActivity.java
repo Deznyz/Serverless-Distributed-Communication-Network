@@ -16,10 +16,17 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize CHORD network
-        node = new ChordNode(MainActivity.this); // Assuming the first node has ID 0
-        ipAddressesTextView = findViewById(R.id.ipAddressesTextView); // Initialize TextView
-        node.addJoinListener(this); // Register MainActivity as a listener for join attempts
+        //---INITIALIZE CHORD NETWORK---
+        //create the node
+        node = new ChordNode(MainActivity.this);
+
+        ipAddressesTextView = findViewById(R.id.ipAddressesTextView);
+
+
+        //MainActivity as a listener for join attempts
+        node.addJoinListener(this);
+
+        //new thread with join logic
         new JoinNetworkTask().execute();
     }
 
@@ -27,13 +34,16 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener 
         @Override
         protected Boolean doInBackground(Void... voids) {
             try {
-                // Perform CHORD network joining operation
-                node.join(MainActivity.this); // Joining the network
-                return true; // Network joined successfully
+                //join the network passingg MainActivity as a listener
+                node.join(MainActivity.this);
+
+                //for UI feedback on the phone
+                return true;
 
             } catch (Exception e) {
                 e.printStackTrace();
-                return false; // Failed to join the network
+                //for UI feedback on the phone
+                return false;
             }
         }
 
@@ -41,43 +51,41 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener 
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
 
-            // Update UI based on the success or failure of the network joining operation
             if (success) {
-                // Network joined successfully
-                // Update UI with success message
+                //for UI feedback on the phone: SUCCESS
                 Toast.makeText(MainActivity.this, "Network joined successfully!", Toast.LENGTH_SHORT).show();
                 System.out.println("Success");
 
             } else {
-                // Failed to join the network
-                // Display error message to the user
+                //for UI feedback on the phone: FAILURE
                 Toast.makeText(MainActivity.this, "Failed to join the network. Please try again.", Toast.LENGTH_SHORT).show();
                 System.out.println("Failure");
             }
         }
     }
 
+    //updates the phone UI with a current list of discovered IP-addresses
     private void updateIpAddressesDisplay(Map<String, String> ipAddresses) {
-        // Prepare a StringBuilder to construct the text to be displayed
         StringBuilder stringBuilder = new StringBuilder();
 
-        // Iterate over the IP addresses and append them to the StringBuilder
         for (Map.Entry<String, String> entry : ipAddresses.entrySet()) {
             stringBuilder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
 
-        // Set the text of the TextView to the constructed string
+        //update textview
         ipAddressesTextView.setText(stringBuilder.toString());
     }
 
+    //ui thread - triggered when new ip-addresses are added to the key-value map
     @Override
     public void onNodeJoin() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // This code will run on the main/UI thread
+
                 Toast.makeText(MainActivity.this, "Node joined the network!", Toast.LENGTH_SHORT).show();
-                // Update IP addresses display
+
+                //get current map
                 updateIpAddressesDisplay(node.getIpAddresses());
             }
         });
