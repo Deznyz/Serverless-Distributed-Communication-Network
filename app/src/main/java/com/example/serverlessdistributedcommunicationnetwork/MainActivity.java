@@ -10,6 +10,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements NodeJoinListener {
     private ChordNode node;
     private TextView ipAddressesTextView;
+    private ChordNodeServer server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +27,12 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener 
         //MainActivity as a listener for join attempts
         node.addJoinListener(this);
 
+        System.out.println("1");
+        new Thread(() -> {
+            server = new ChordNodeServer(5000, node);
+            server.startServer();
+        }).start();
+        System.out.println("2");
         //new thread with join logic
         new JoinNetworkTask().execute();
     }
