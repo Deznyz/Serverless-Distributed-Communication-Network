@@ -27,14 +27,18 @@ public class JoinRequestTask extends AsyncTask<String, Void, JoinResponse> {
              ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
 
+            //sends joinrequest (see ChordNode.js)
             outputStream.writeObject(joinRequest);
             outputStream.flush();
 
+            //gets the response from the other node
             Object response = inputStream.readObject();
 
+            //checks if correct formatting
             if (response instanceof JoinResponse) {
                 return (JoinResponse) response;
             } else {
+                //not correct formatiing
                 System.err.println("Error: Invalid response received");
                 return null;
             }
@@ -46,6 +50,7 @@ public class JoinRequestTask extends AsyncTask<String, Void, JoinResponse> {
 
     @Override
     protected void onPostExecute(JoinResponse joinResponse) {
+        //lets the responsses be handled in mainactivity
         if (joinResponseListener != null) {
             joinResponseListener.onJoinResponseReceived(joinResponse);
         }else if (joinResponseListener == null){

@@ -24,13 +24,14 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //---INITIALIZE CHORD NETWORK---
         //create the node
         node = new ChordNode(MainActivity.this);
 
+        //---TO BE REPLACED WITH MORE INTERACTABLE AND USERFRIENDLY UI---
+
         ipAddressesTextView = findViewById(R.id.ipAddressesTextView);
 
-
+        //used for the ability to connect to another ndoe
         ipAddressEditText = findViewById(R.id.ipAddressEditText);
         portEditText = findViewById(R.id.portEditText);
         joinButton = findViewById(R.id.joinButton);
@@ -47,10 +48,16 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
             }
         });
 
+        //---END OF: TO BE REPLACED WITH MORE INTERACTABLE AND USERFRIENDLY UI---
+
+
+
         //MainActivity as a listener for join attempts
         node.addJoinListener(this);
 
-        System.out.println("1");
+        System.out.println("1"); //for debugging
+
+        //thread for tcp connection server - uses port 5000
         new Thread(() -> {
             server = new ChordNodeServer(5000, node);
             server.startServer();
@@ -58,8 +65,8 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
 
 
 
-        System.out.println("2");
-        //new thread with join logic
+        System.out.println("2");//for debuggging
+        //initial join logic -- needs to be revisited at some point (but works)
         new JoinNetworkTask().execute();
     }
 
@@ -124,12 +131,14 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
         });
     }
 
+    //ui response + updating successor and predecessor
     public void onJoinResponseReceived(JoinResponse response) {
         if (response != null) {
             System.out.println("Join successful: " + response);
-            //node.setSuccessor(response.getSuccessor());
-            //node.setPredecessor(response.getPredecessor());
+            node.setSuccessor(response.getSuccessor());
+            node.setPredecessor(response.getPredecessor());
 
+            //ui response
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -137,8 +146,10 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
                 }
             });
         } else {
+            //error message in case of error i connecting
             System.err.println("Failed to join the network");
 
+            //ui response
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

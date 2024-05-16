@@ -17,6 +17,7 @@ public class ChordNodeServer {
     }
 
     public void startServer() {
+        //new thread that keeps listening
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
                 while (true) {
@@ -43,18 +44,32 @@ public class ChordNodeServer {
             try (ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
                  ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream())) {
 
+                //stores the request
                 Object request = inputStream.readObject();
 
+                //makes sure its the right formatting
                 if (request instanceof JoinRequest) {
+
+                    //stores it as right formatting
                     JoinRequest joinRequest = (JoinRequest) request;
+
+                    //gets the successor to the given nodeId
                     ChordNode successor = node.findSuccessor(joinRequest.getNodeId());
+                    //removes the join listeners of the successor due to serialization problems with MainActivity
                     successor.removeAllJoinListeners();
+                    //done in order to remove the join listeners of the successors' successor due to serialization problems with MainActivity
                     successor.setSuccessor(successor.findSuccessor(successor.getNodeId()));
+
                     ChordNode predecessor = (successor != null) ? successor.getPredecessor() : null;
+
+                    //sends back the join respone
                     JoinResponse joinResponse = new JoinResponse(successor, predecessor);
                     outputStream.writeObject(joinResponse);
                     outputStream.flush();
                     System.out.println("Processed JoinRequest from node: " + joinRequest.getNodeId());
+
+
+                    //below (FindSuccessorRequest) is not in use yet
                 } else if (request instanceof FindSuccessorRequest) {
                     FindSuccessorRequest fsRequest = (FindSuccessorRequest) request;
                     ChordNode successor = node.findSuccessor(fsRequest.getNodeId());
@@ -71,6 +86,8 @@ public class ChordNodeServer {
     }
 }
 
+
+//rest of code is an idea for later (very simple implementation and not operable yet)
 class FindSuccessorRequest implements Serializable {
     private int nodeId;
 

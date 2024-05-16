@@ -7,17 +7,23 @@ import java.util.*;
 
 public class ChordNode implements Serializable {
     private static final int M = 24;
+    //total space of node IDs - using M=24 makes id_space = 16777216
+    //done this way for easy scalability
     private static final int ID_SPACE = (int) Math.pow(2, M);
-    private static final int DISCOVERY_PORT = 5555;
+    private static final int DISCOVERY_PORT = 5555;//port for (UDP broadcast discovery
 
     private int nodeId;
     private ChordNode successor;
     private ChordNode predecessor;
-    private ChordNode[] fingerTable;
+    private ChordNode[] fingerTable;//changed to array for now, for easier usability in early stages
     private Map<String, String> ipAddresses;
 
+
+
+    //for updating the display with ip-addresses
     private List<NodeJoinListener> joinListeners;
 
+    //node object
     public ChordNode(NodeJoinListener listener) {
         this.nodeId = generateNodeId();
         this.fingerTable = new ChordNode[M];
@@ -28,11 +34,13 @@ public class ChordNode implements Serializable {
         joinListeners = new ArrayList<>();
     }
 
+    //generates a random node id between 0 and ID_SPACE - 1
     private int generateNodeId() {
         Random random = new Random();
         return random.nextInt(ID_SPACE);
     }
 
+    //discpvery broadcast listener
     private void startDiscoveryListener(NodeJoinListener listener) {
         new Thread(() -> {
             try (MulticastSocket socket = new MulticastSocket(DISCOVERY_PORT)) {
@@ -45,9 +53,15 @@ public class ChordNode implements Serializable {
                     socket.receive(packet);
 
                     String message = new String(packet.getData(), packet.getOffset(), packet.getLength());
+
+                    //triggers when another node uses the "join" function
                     if (message.equals("DISCOVER")) {
                         sendDiscoveryResponse(packet.getAddress(), packet.getPort());
+
+                        //stores the ip-address (so far) in a key-value map
                         ipAddresses.put(packet.getAddress().getHostAddress(), "test");
+
+                        //triggers event
                         listener.onNodeJoin();
                     }
                 }
@@ -57,6 +71,7 @@ public class ChordNode implements Serializable {
         }).start();
     }
 
+    //sends discovery response, when recieving a discovery message from another node
     private void sendDiscoveryResponse(InetAddress address, int port) {
         try (DatagramSocket socket = new DatagramSocket()) {
             String response = nodeId + "," + InetAddress.getLocalHost().getHostAddress();
@@ -68,9 +83,12 @@ public class ChordNode implements Serializable {
         }
     }
 
+    //initial discover message sent when joining the network
     public void join(NodeJoinListener listener) {
         try (DatagramSocket socket = new DatagramSocket()) {
             InetAddress group = InetAddress.getByName("224.0.0.1");
+
+            //this message triggers the broadcast listener of other nodes
             String message = "DISCOVER";
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, DISCOVERY_PORT);
@@ -81,6 +99,9 @@ public class ChordNode implements Serializable {
         }
     }
 
+    //---HELPER FUNCTIONS IN CHORD---
+
+    //finds the successor of a given nodeID
     public ChordNode findSuccessor(int id) {
         if (successor != null && isInInterval(id, nodeId, successor.nodeId)) {
             return successor;
@@ -93,6 +114,7 @@ public class ChordNode implements Serializable {
             }
         }
     }
+
 
     private boolean isInInterval(int id, int start, int end) {
         if (start < end) {
@@ -110,7 +132,9 @@ public class ChordNode implements Serializable {
         }
         return this;
     }
+    //---END OF: HELPER FUNCTIONS IN CHORD---
 
+    //---GETTERS AND SETTERS---
     public ChordNode getPredecessor() {
         return predecessor;
     }
@@ -134,7 +158,10 @@ public class ChordNode implements Serializable {
     public Map<String, String> getIpAddresses() {
         return ipAddresses;
     }
+    //---END OF: GETTERS AND SETTERS---
 
+
+    //---JOIN LISTENERS METHODS---
     public void addJoinListener(NodeJoinListener listener) {
         joinListeners.add(listener);
     }
@@ -142,8 +169,11 @@ public class ChordNode implements Serializable {
     public void removeAllJoinListeners() {
         joinListeners.clear();
     }
+    //---END OF: JOIN LISTENERS METHODS---
+
 }
 
+//message format send by the JoinRequestTask and recieved by the ChordNodeServer
 class JoinRequest implements Serializable {
     private int nodeId;
 
@@ -156,6 +186,7 @@ class JoinRequest implements Serializable {
     }
 }
 
+//message format send by the ChordNodeServer and recieved by the JoinRequestTask
 class JoinResponse implements Serializable {
     private ChordNode successor;
     private ChordNode predecessor;
@@ -164,7 +195,7 @@ class JoinResponse implements Serializable {
         this.successor = successor;
         this.predecessor = predecessor;
     }
-/*
+
     public ChordNode getSuccessor() {
         return successor;
     }
@@ -173,5 +204,5 @@ class JoinResponse implements Serializable {
         return predecessor;
     }
 
- */
+
 }
