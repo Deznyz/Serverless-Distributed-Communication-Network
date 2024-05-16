@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
     //ui response + updating successor and predecessor
     public void onJoinResponseReceived(JoinResponse response) {
         if (response != null) {
-            System.out.println("Join successful: " + response);
+            System.out.println("Join successful with: " + response.getSuccessor());
             node.setSuccessor(response.getSuccessor());
             node.setPredecessor(response.getPredecessor());
 
