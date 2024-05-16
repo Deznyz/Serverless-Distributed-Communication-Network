@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
 
         //create the node
         node = new ChordNode(MainActivity.this);
+        JoinRequestTask joinRequestTask = new JoinRequestTask(node, MainActivity.this);
+
 
         //---TO BE REPLACED WITH MORE INTERACTABLE AND USERFRIENDLY UI---
 
@@ -42,11 +44,13 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
             String port = portEditText.getText().toString();
 
             if (!ipAddress.isEmpty() && !port.isEmpty()) {
-                new JoinRequestTask(node, MainActivity.this).execute(ipAddress, port);
+                joinRequestTask.execute(ipAddress, "5000");
             } else {
                 Toast.makeText(MainActivity.this, "Please enter both IP address and port", Toast.LENGTH_SHORT).show();
             }
         });
+
+        //create a close connection button in the chatroom calling: "joinRequestTask.closeConnection();"
 
         //---END OF: TO BE REPLACED WITH MORE INTERACTABLE AND USERFRIENDLY UI---
 

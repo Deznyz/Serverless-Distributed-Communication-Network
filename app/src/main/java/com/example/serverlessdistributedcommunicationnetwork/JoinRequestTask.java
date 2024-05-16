@@ -1,7 +1,6 @@
 package com.example.serverlessdistributedcommunicationnetwork;
 
 import android.os.AsyncTask;
-import android.widget.Toast;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -10,6 +9,10 @@ import java.net.Socket;
 public class JoinRequestTask extends AsyncTask<String, Void, JoinResponse> {
     private ChordNode node;
     private JoinResponseListener joinResponseListener;
+
+    private Socket socket;
+    private ObjectOutputStream outputStream;
+    private ObjectInputStream inputStream;
 
     public JoinRequestTask(ChordNode node, JoinResponseListener listener) {
         this.node = node;
@@ -22,23 +25,28 @@ public class JoinRequestTask extends AsyncTask<String, Void, JoinResponse> {
         int port = Integer.parseInt(params[1]);
         JoinRequest joinRequest = new JoinRequest(node.getNodeId());
 
-        try (Socket socket = new Socket(ipAddress, port);
+        try {
+            // Establish the TCP connection
+            socket = new Socket(ipAddress, port);
 
-             ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
+            // Get output stream to send data
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
 
-            //sends joinrequest (see ChordNode.js)
+            // Get input stream to receive data
+            inputStream = new ObjectInputStream(socket.getInputStream());
+
+            // Send join request
             outputStream.writeObject(joinRequest);
             outputStream.flush();
 
-            //gets the response from the other node
+            // Read response
             Object response = inputStream.readObject();
 
-            //checks if correct formatting
+            // Check if correct formatting
             if (response instanceof JoinResponse) {
                 return (JoinResponse) response;
             } else {
-                //not correct formatiing
+                // Not correct formatting
                 System.err.println("Error: Invalid response received");
                 return null;
             }
@@ -48,13 +56,26 @@ public class JoinRequestTask extends AsyncTask<String, Void, JoinResponse> {
         }
     }
 
+    //close the connection after handling the task
+    protected void closeConnection(){
+
+        try {
+            if (outputStream != null) outputStream.close();
+            if (inputStream != null) inputStream.close();
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     @Override
     protected void onPostExecute(JoinResponse joinResponse) {
-        //lets the responsses be handled in mainactivity
+        // Handle the response in MainActivity
         if (joinResponseListener != null) {
             joinResponseListener.onJoinResponseReceived(joinResponse);
-        }else if (joinResponseListener == null){
+        } else {
             System.out.println("nodeJoinListener is null");
         }
+
+
     }
 }
