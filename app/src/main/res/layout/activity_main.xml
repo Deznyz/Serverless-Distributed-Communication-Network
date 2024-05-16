@@ -3,15 +3,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/ipAddressesTextView"
+        android:id="@+id/ipLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="IP Addresses:"
-        android:textSize="16sp"
-        android:textColor="@android:color/black"
-        android:padding="8dp"/>
+        android:text="IP Address"
+        android:textSize="18sp"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="8dp"/>
 
+    <EditText
+        android:id="@+id/ipAddressEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter IP Address"
+        android:inputType="text"
+        android:layout_below="@id/ipLabel"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/portLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Port"
+        android:textSize="18sp"
+        android:layout_below="@id/ipAddressEditText"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/portEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Port"
+        android:inputType="number"
+        android:layout_below="@id/portLabel"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/joinButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Join Network"
+        android:layout_below="@id/portEditText"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/ipAddressesTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:layout_below="@id/joinButton"
+        android:layout_marginTop="32dp"
+        android:textSize="16sp"/>
 </RelativeLayout>

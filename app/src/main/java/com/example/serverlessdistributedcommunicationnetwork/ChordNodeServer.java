@@ -6,7 +6,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.*;
 
 public class ChordNodeServer {
     private int port;
@@ -18,17 +17,16 @@ public class ChordNodeServer {
     }
 
     public void startServer() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            while (true) {
-                System.out.println("1.1");
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("1.2");
-                new Thread(new JoinHandler(clientSocket, node)).start();
-                System.out.println("1.3");
+        new Thread(() -> {
+            try (ServerSocket serverSocket = new ServerSocket(port)) {
+                while (true) {
+                    Socket clientSocket = serverSocket.accept();
+                    new Thread(new JoinHandler(clientSocket, node)).start();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        }).start();
     }
 
     private static class JoinHandler implements Runnable {
@@ -50,16 +48,19 @@ public class ChordNodeServer {
                 if (request instanceof JoinRequest) {
                     JoinRequest joinRequest = (JoinRequest) request;
                     ChordNode successor = node.findSuccessor(joinRequest.getNodeId());
-                    ChordNode predecessor = successor.getPredecessor();
-
+                    successor.removeAllJoinListeners();
+                    successor.setSuccessor(successor.findSuccessor(successor.getNodeId()));
+                    ChordNode predecessor = (successor != null) ? successor.getPredecessor() : null;
                     JoinResponse joinResponse = new JoinResponse(successor, predecessor);
                     outputStream.writeObject(joinResponse);
                     outputStream.flush();
+                    System.out.println("Processed JoinRequest from node: " + joinRequest.getNodeId());
                 } else if (request instanceof FindSuccessorRequest) {
                     FindSuccessorRequest fsRequest = (FindSuccessorRequest) request;
                     ChordNode successor = node.findSuccessor(fsRequest.getNodeId());
                     outputStream.writeObject(new FindSuccessorResponse(successor));
                     outputStream.flush();
+                    System.out.println("Processed FindSuccessorRequest for node: " + fsRequest.getNodeId());
                 } else {
                     System.err.println("Error: Invalid request received");
                 }
@@ -70,7 +71,6 @@ public class ChordNodeServer {
     }
 }
 
-// Serializable classes for find successor request and response
 class FindSuccessorRequest implements Serializable {
     private int nodeId;
 
@@ -94,5 +94,3 @@ class FindSuccessorResponse implements Serializable {
         return successor;
     }
 }
-
-
