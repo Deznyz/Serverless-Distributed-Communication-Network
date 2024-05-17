@@ -2,14 +2,22 @@ package com.example.serverlessdistributedcommunicationnetwork;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.Serializable;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements NodeJoinListener {
+public class MainActivity extends AppCompatActivity implements NodeJoinListener, JoinResponseListener {
     private ChordNode node;
     private TextView ipAddressesTextView;
+    private EditText ipAddressEditText;
+    private EditText portEditText;
+    private Button joinButton;
+    private ChordNodeServer server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,9 +31,34 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener 
         ipAddressesTextView = findViewById(R.id.ipAddressesTextView);
 
 
+        ipAddressEditText = findViewById(R.id.ipAddressEditText);
+        portEditText = findViewById(R.id.portEditText);
+        joinButton = findViewById(R.id.joinButton);
+
+
+        joinButton.setOnClickListener(v -> {
+            String ipAddress = ipAddressEditText.getText().toString();
+            String port = portEditText.getText().toString();
+
+            if (!ipAddress.isEmpty() && !port.isEmpty()) {
+                new JoinRequestTask(node, MainActivity.this).execute(ipAddress, port);
+            } else {
+                Toast.makeText(MainActivity.this, "Please enter both IP address and port", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         //MainActivity as a listener for join attempts
         node.addJoinListener(this);
 
+        System.out.println("1");
+        new Thread(() -> {
+            server = new ChordNodeServer(5000, node);
+            server.startServer();
+        }).start();
+
+
+
+        System.out.println("2");
         //new thread with join logic
         new JoinNetworkTask().execute();
     }
@@ -91,4 +124,27 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener 
         });
     }
 
+    public void onJoinResponseReceived(JoinResponse response) {
+        if (response != null) {
+            System.out.println("Join successful: " + response);
+            //node.setSuccessor(response.getSuccessor());
+            //node.setPredecessor(response.getPredecessor());
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "Joined the network successfully!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            System.err.println("Failed to join the network");
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "Failed to join the network", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
 }
