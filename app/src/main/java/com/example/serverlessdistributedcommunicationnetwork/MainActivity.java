@@ -1,7 +1,9 @@
 package com.example.serverlessdistributedcommunicationnetwork;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -32,18 +34,18 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
 
 
         ipAddressEditText = findViewById(R.id.ipAddressEditText);
-        portEditText = findViewById(R.id.portEditText);
+        //portEditText = findViewById(R.id.portEditText);
         joinButton = findViewById(R.id.joinButton);
 
 
         joinButton.setOnClickListener(v -> {
             String ipAddress = ipAddressEditText.getText().toString();
-            String port = portEditText.getText().toString();
+            //String port = portEditText.getText().toString();
 
-            if (!ipAddress.isEmpty() && !port.isEmpty()) {
-                new JoinRequestTask(node, MainActivity.this).execute(ipAddress, port);
+            if (!ipAddress.isEmpty()) {
+                new JoinRequestTask(node, MainActivity.this).execute(ipAddress, "5000");
             } else {
-                Toast.makeText(MainActivity.this, "Please enter both IP address and port", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Please enter IP address", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -61,6 +63,13 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
         System.out.println("2");
         //new thread with join logic
         new JoinNetworkTask().execute();
+
+    }
+
+    public void GoToChatroom(View v){
+        Intent i = new Intent(this, Chatroom.class);
+        startActivity(i);
+
     }
 
     private class JoinNetworkTask extends AsyncTask<Void, Void, Boolean> {
