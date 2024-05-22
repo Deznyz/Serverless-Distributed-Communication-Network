@@ -28,13 +28,6 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                NavigationManager.navigateToChatroom(MainActivity.this);
-            }
-        });*/
-
         //---INITIALIZE CHORD NETWORK---
         //create the node
         node = new ChordNode(MainActivity.this);
@@ -51,11 +44,16 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
             String ipAddress = ipAddressEditText.getText().toString();
             //String port = portEditText.getText().toString();
 
-            if (!ipAddress.isEmpty()) {
-                new JoinRequestTask(node, MainActivity.this).execute(ipAddress, "5000");
-                NavigationManager.navigateTo(MainActivity.this, Chatroom.class);
+            if (!ipAddress.isEmpty() && isValidIpAddress(ipAddress)) {
+                if (ipAddressesTextView.getText().toString().contains(ipAddress)){
+
+                    new JoinRequestTask(node, MainActivity.this).execute(ipAddress, "5000");
+                    NavigationManager.navigateTo(MainActivity.this, Chatroom.class);
+                } else {
+                    Toast.makeText(MainActivity.this, "IP address is not found inside of the network", Toast.LENGTH_SHORT).show();
+                }
             } else {
-                Toast.makeText(MainActivity.this, "Please enter IP address", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Please enter a (valid) IP address", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -76,8 +74,11 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
 
     }
 
-
-
+    private boolean isValidIpAddress(String ipAddress) {
+        // Basic validering af formattet af en ip adresse
+        String ipPattern = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return ipAddress.matches(ipPattern);
+    }
 
     private class JoinNetworkTask extends AsyncTask<Void, Void, Boolean> {
         @Override
@@ -113,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
         }
     }
 
+    // todo: man skulle måske overveje om det skulle være objekter i stedet for at type Node, altså en ny klasse
     //updates the phone UI with a current list of discovered IP-addresses
     private void updateIpAddressesDisplay(Map<String, String> ipAddresses) {
         StringBuilder stringBuilder = new StringBuilder();

@@ -47,7 +47,7 @@ public class ChordNode implements Serializable {
                     String message = new String(packet.getData(), packet.getOffset(), packet.getLength());
                     if (message.equals("DISCOVER")) {
                         sendDiscoveryResponse(packet.getAddress(), packet.getPort());
-                        ipAddresses.put(packet.getAddress().getHostAddress(), "test");
+                        ipAddresses.put(packet.getAddress().getHostAddress(), "Username");
                         listener.onNodeJoin();
                     }
                 }
