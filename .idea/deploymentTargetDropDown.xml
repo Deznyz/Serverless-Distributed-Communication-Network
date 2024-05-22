@@ -10,8 +10,8 @@
               <type value="RUNNING_DEVICE_TARGET" />
               <deviceKey>
                 <Key>
-                  <type value="SERIAL_NUMBER" />
-                  <value value="RFCR60KT9AE" />
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="$USER_HOME$/.android/avd/Pixel_8_API_VanillaIceCream.avd" />
                 </Key>
               </deviceKey>
             </Target>

@@ -10,6 +10,8 @@ import android.widget.Toast;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.serverlessdistributedcommunicationnetwork.utils.NavigationManager;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -25,6 +27,13 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /*findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                NavigationManager.navigateToChatroom(MainActivity.this);
+            }
+        });*/
 
         //---INITIALIZE CHORD NETWORK---
         //create the node
@@ -44,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
 
             if (!ipAddress.isEmpty()) {
                 new JoinRequestTask(node, MainActivity.this).execute(ipAddress, "5000");
+                NavigationManager.navigateTo(MainActivity.this, Chatroom.class);
             } else {
                 Toast.makeText(MainActivity.this, "Please enter IP address", Toast.LENGTH_SHORT).show();
             }
@@ -66,11 +76,8 @@ public class MainActivity extends AppCompatActivity implements NodeJoinListener,
 
     }
 
-    public void GoToChatroom(View v){
-        Intent i = new Intent(this, Chatroom.class);
-        startActivity(i);
 
-    }
+
 
     private class JoinNetworkTask extends AsyncTask<Void, Void, Boolean> {
         @Override
