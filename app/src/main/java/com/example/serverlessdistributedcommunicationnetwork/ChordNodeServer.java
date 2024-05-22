@@ -55,12 +55,6 @@ public class ChordNodeServer {
                     outputStream.writeObject(joinResponse);
                     outputStream.flush();
                     System.out.println("Processed JoinRequest from node: " + joinRequest.getNodeId());
-                } else if (request instanceof FindSuccessorRequest) {
-                    FindSuccessorRequest fsRequest = (FindSuccessorRequest) request;
-                    ChordNode successor = node.findSuccessor(fsRequest.getNodeId());
-                    outputStream.writeObject(new FindSuccessorResponse(successor));
-                    outputStream.flush();
-                    System.out.println("Processed FindSuccessorRequest for node: " + fsRequest.getNodeId());
                 } else {
                     System.err.println("Error: Invalid request received");
                 }
