@@ -1,3 +1,4 @@
+// ChordNode.java
 package com.example.serverlessdistributedcommunicationnetwork;
 
 import java.io.IOException;
@@ -139,39 +140,20 @@ public class ChordNode implements Serializable {
         joinListeners.add(listener);
     }
 
-    public void removeAllJoinListeners() {
-        joinListeners.clear();
-    }
-}
-
-class JoinRequest implements Serializable {
-    private int nodeId;
-
-    public JoinRequest(int nodeId) {
-        this.nodeId = nodeId;
+    public void removeJoinListener(NodeJoinListener listener) {
+        joinListeners.remove(listener);
     }
 
-    public int getNodeId() {
-        return nodeId;
+    public void leave() {
+        if (predecessor != null) {
+            predecessor.setSuccessor(successor);
+        }
+        if (successor != null) {
+            successor.setPredecessor(predecessor);
+            // Transfer data to the successor
+            // transferDataToSuccessor(); // Implement this if you have data to transfer
+        }
+        predecessor = null;
+        successor = null;
     }
-}
-
-class JoinResponse implements Serializable {
-    private ChordNode successor;
-    private ChordNode predecessor;
-
-    public JoinResponse(ChordNode successor, ChordNode predecessor) {
-        this.successor = successor;
-        this.predecessor = predecessor;
-    }
-/*
-    public ChordNode getSuccessor() {
-        return successor;
-    }
-
-    public ChordNode getPredecessor() {
-        return predecessor;
-    }
-
- */
 }

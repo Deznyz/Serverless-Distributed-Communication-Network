@@ -48,8 +48,6 @@ public class ChordNodeServer {
                 if (request instanceof JoinRequest) {
                     JoinRequest joinRequest = (JoinRequest) request;
                     ChordNode successor = node.findSuccessor(joinRequest.getNodeId());
-                    successor.removeAllJoinListeners();
-                    successor.setSuccessor(successor.findSuccessor(successor.getNodeId()));
                     ChordNode predecessor = (successor != null) ? successor.getPredecessor() : null;
                     JoinResponse joinResponse = new JoinResponse(successor, predecessor);
                     outputStream.writeObject(joinResponse);
@@ -61,6 +59,18 @@ public class ChordNodeServer {
                     outputStream.writeObject(new FindSuccessorResponse(successor));
                     outputStream.flush();
                     System.out.println("Processed FindSuccessorRequest for node: " + fsRequest.getNodeId());
+                } else if (request instanceof LeaveRequest) {
+                    LeaveRequest leaveRequest = (LeaveRequest) request;
+                    if (node.getNodeId() == leaveRequest.getNodeId()) {
+                        node.leave();
+                        outputStream.writeObject(new LeaveResponse(true));
+                        outputStream.flush();
+                        System.out.println("Processed LeaveRequest for node: " + leaveRequest.getNodeId());
+                    } else {
+                        outputStream.writeObject(new LeaveResponse(false));
+                        outputStream.flush();
+                        System.err.println("Error: LeaveRequest for non-existing node");
+                    }
                 } else {
                     System.err.println("Error: Invalid request received");
                 }
@@ -68,29 +78,5 @@ public class ChordNodeServer {
                 e.printStackTrace();
             }
         }
-    }
-}
-
-class FindSuccessorRequest implements Serializable {
-    private int nodeId;
-
-    public FindSuccessorRequest(int nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public int getNodeId() {
-        return nodeId;
-    }
-}
-
-class FindSuccessorResponse implements Serializable {
-    private ChordNode successor;
-
-    public FindSuccessorResponse(ChordNode successor) {
-        this.successor = successor;
-    }
-
-    public ChordNode getSuccessor() {
-        return successor;
     }
 }
